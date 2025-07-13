@@ -14,10 +14,12 @@ echo "Downloading COCO 2017 dataset..."
 
 # Download training images
 echo "Downloading training images..."
-wget -c http://images.cocodataset.org/zips/train2017.zip
-unzip -q train2017.zip
-rm train2017.zip
-
+if [ ! -d "train2017" ]; then
+    if [ ! -f "train2017.zip" ]; then
+        wget -c http://images.cocodataset.org/zips/train2017.zip
+    fi
+    unzip -q train2017.zip
+fi
 # Download validation images
 echo "Downloading validation images..."
 wget -c http://images.cocodataset.org/zips/val2017.zip
