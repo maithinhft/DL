@@ -334,7 +334,7 @@ def get_training_config():
     }
     return config
 
-def training_model():
+def training_model(dataset_path):
     """
     Main training function
     """
@@ -351,7 +351,7 @@ def training_model():
     print("Loading COCO dataset...")
     try:
         train_loader, val_loader, num_classes, class_names = load_coco_dataset(
-            data_dir="coco_data",
+            data_dir=dataset_path,
             train_split=0.7,
             batch_size=config['batch_size'],
             num_workers=config['num_workers']

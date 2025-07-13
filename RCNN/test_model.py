@@ -456,7 +456,7 @@ def load_trained_model(model_path, num_classes, device):
     print(f"Model loaded from {model_path}")
     return model
 
-def test_model():
+def test_model(dataset_path):
     """
     Main evaluation function
     """
@@ -470,7 +470,7 @@ def test_model():
     print("Loading COCO dataset...")
     try:
         train_loader, test_loader, num_classes, class_names = load_coco_dataset(
-            data_dir="coco_data",
+            data_dir=dataset_path,
             train_split=0.7,
             batch_size=4,
             num_workers=2

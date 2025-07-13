@@ -5,8 +5,6 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from pycocotools.coco import COCO
 import torchvision.transforms as transforms
-from sklearn.model_selection import train_test_split
-import json
 
 class COCODataset(Dataset):
     def __init__(self, root_dir, annotation_file, transform=None):
@@ -123,31 +121,9 @@ def load_coco_dataset(data_dir="coco_data", train_split=0.7, batch_size=4, num_w
     train_dataset = COCODataset(train_img_dir, train_ann_file, transform=get_transform(train=True))
     val_dataset = COCODataset(val_img_dir, val_ann_file, transform=get_transform(train=False))
     
-    # Kết hợp train và val dataset để chia lại theo tỉ lệ 70:30
-    combined_image_ids = train_dataset.image_ids + val_dataset.image_ids
-    combined_datasets = [train_dataset] * len(train_dataset.image_ids) + [val_dataset] * len(val_dataset.image_ids)
-    
-    # Chia train/test theo tỉ lệ 70:30
-    train_indices, test_indices = train_test_split(
-        range(len(combined_image_ids)), 
-        test_size=1-train_split, 
-        random_state=42,
-        shuffle=True
-    )
-    
-    # Tạo subset datasets
-    train_subset = torch.utils.data.Subset(
-        CombinedDataset(train_dataset, val_dataset), 
-        train_indices
-    )
-    test_subset = torch.utils.data.Subset(
-        CombinedDataset(train_dataset, val_dataset), 
-        test_indices
-    )
-    
     # Tạo DataLoaders
     train_loader = DataLoader(
-        train_subset, 
+        train_dataset, 
         batch_size=batch_size, 
         shuffle=True, 
         num_workers=num_workers,
@@ -155,7 +131,7 @@ def load_coco_dataset(data_dir="coco_data", train_split=0.7, batch_size=4, num_w
     )
     
     test_loader = DataLoader(
-        test_subset, 
+        val_dataset, 
         batch_size=batch_size, 
         shuffle=False, 
         num_workers=num_workers,
@@ -167,30 +143,12 @@ def load_coco_dataset(data_dir="coco_data", train_split=0.7, batch_size=4, num_w
     num_classes = train_dataset.num_classes
     
     print(f"Dataset loaded successfully!")
-    print(f"Total images: {len(combined_image_ids)}")
-    print(f"Train images: {len(train_indices)}")
-    print(f"Test images: {len(test_indices)}")
+    print(f"Train images: {len(train_dataset.image_ids)}")
+    print(f"Test images: {len(val_dataset.image_ids)}")
     print(f"Number of classes: {num_classes}")
     print(f"Classes: {class_names[:10]}...")  # Hiển thị 10 classes đầu tiên
     
     return train_loader, test_loader, num_classes, class_names
-
-class CombinedDataset(Dataset):
-    """Dataset kết hợp train và val dataset"""
-    def __init__(self, train_dataset, val_dataset):
-        self.train_dataset = train_dataset
-        self.val_dataset = val_dataset
-        self.train_len = len(train_dataset)
-        self.total_len = len(train_dataset) + len(val_dataset)
-    
-    def __len__(self):
-        return self.total_len
-    
-    def __getitem__(self, idx):
-        if idx < self.train_len:
-            return self.train_dataset[idx]
-        else:
-            return self.val_dataset[idx - self.train_len]
 
 if __name__ == "__main__":
     # Test loading dataset
