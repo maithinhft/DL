@@ -333,7 +333,8 @@ def get_training_config():
         'early_stopping_patience': 10,
         'checkpoint_dir': 'checkpoints',
         'log_dir': 'logs',
-        'num_workers': 4
+        'num_workers': 4,
+        'training_set_percent': 0.01,
     }
     return config
 
@@ -355,7 +356,7 @@ def training_model(dataset_path):
     try:
         train_loader, val_loader, num_classes, class_names = load_coco_dataset(
             data_dir=dataset_path,
-            train_set_percent=0.1,
+            train_set_percent=config['training_set_percent'],
             batch_size=config['batch_size'],
             num_workers=config['num_workers']
         )

@@ -471,7 +471,7 @@ def test_model(dataset_path):
     try:
         train_loader, test_loader, num_classes, class_names = load_coco_dataset(
             data_dir=dataset_path,
-            train_set_percent=0.1,
+            train_set_percent=1,
             batch_size=4,
             num_workers=2
         )
