@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Tạo thư mục dữ liệu
-mkdir -p coco_data
-cd coco_data
+mkdir -p coco2017
+cd coco2017
 
 # Tạo cấu trúc thư mục
 mkdir -p train2017
@@ -48,4 +48,4 @@ echo "Directory structure:"
 ls -la
 
 cd ..
-echo "COCO dataset is ready in coco_data/ directory"
+echo "COCO dataset is ready in coco2017/ directory"

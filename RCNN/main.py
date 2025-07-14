@@ -7,9 +7,9 @@ if __name__ == "__main__":
     # demo_model()  # Test model creation
 
     # subprocess.run(["bash", "./download_dataset.sh"]); # Download dataset using wget
-    # dataset_path = "coco_data"  # Path to dataset directory
+    dataset_path = "coco2017"  # Path to dataset directory
     
-    dataset_path = download_dataset() # Download dataset using kagglehub
+    dataset_path = download_dataset() + f"/{dataset_path}" # Download dataset using kagglehub
     
     print("Training model started...")  # Placeholder for actual training process
     training_model(dataset_path)
