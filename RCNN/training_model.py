@@ -352,7 +352,7 @@ def training_model(dataset_path):
     try:
         train_loader, val_loader, num_classes, class_names = load_coco_dataset(
             data_dir=dataset_path,
-            train_split=0.7,
+            train_set_percent=0.1,
             batch_size=config['batch_size'],
             num_workers=config['num_workers']
         )

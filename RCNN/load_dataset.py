@@ -105,7 +105,57 @@ def collate_fn(batch):
     """Custom collate function for DataLoader"""
     return tuple(zip(*batch))
 
-def load_coco_dataset(data_dir="coco_data", train_split=0.7, batch_size=4, num_workers=4):
+def get_subset_indices(dataset, percent=0.1):
+    from collections import defaultdict
+    
+    # Tạo dictionary để lưu indices theo từng category
+    category_indices = defaultdict(list)
+    
+    # Duyệt qua tất cả images để group theo category
+    for idx in range(len(dataset)):
+        img_id = dataset.image_ids[idx]
+        ann_ids = dataset.coco.getAnnIds(imgIds=img_id)
+        anns = dataset.coco.loadAnns(ann_ids)
+        
+        # Lấy tất cả category_ids có trong image này
+        categories_in_image = set()
+        for ann in anns:
+            if ann['bbox'][2] > 0 and ann['bbox'][3] > 0:  # valid bbox
+                categories_in_image.add(ann['category_id'])
+        
+        # Thêm index này vào tất cả categories có trong image
+        for cat_id in categories_in_image:
+            category_indices[cat_id].append(idx)
+    
+    # Lấy mẫu từ mỗi category
+    selected_indices = set()
+    
+    print(f"Sampling {percent*100}% from each category:")
+    for cat_id, indices in category_indices.items():
+        cat_info = dataset.coco.cats[cat_id]
+        cat_name = cat_info['name']
+        
+        # Tính số lượng mẫu cần lấy cho category này
+        total_samples = len(indices)
+        subset_size = max(1, int(total_samples * percent))  # Ít nhất 1 mẫu
+        
+        # Random sampling trong category này
+        if subset_size >= total_samples:
+            sampled_indices = indices
+        else:
+            sampled_indices = np.random.choice(indices, size=subset_size, replace=False)
+        
+        # Thêm vào tập kết quả
+        selected_indices.update(sampled_indices)
+        
+        print(f"  {cat_name}: {subset_size}/{total_samples} samples")
+    
+    # Convert về list và sort
+    final_indices = sorted(list(selected_indices))
+    
+    return final_indices
+
+def load_coco_dataset(data_dir="coco_data", train_set_percent=0.1, batch_size=4, num_workers=4):
     """
     Load COCO dataset và chia thành train/test với tỉ lệ 70:30
     """
@@ -120,10 +170,15 @@ def load_coco_dataset(data_dir="coco_data", train_split=0.7, batch_size=4, num_w
     # Tạo dataset cho train và validation
     train_dataset = COCODataset(train_img_dir, train_ann_file, transform=get_transform(train=True))
     val_dataset = COCODataset(val_img_dir, val_ann_file, transform=get_transform(train=False))
+
+    train_indices = get_subset_indices(train_dataset, train_set_percent)
+    val_indices = get_subset_indices(val_dataset, train_set_percent)
+    train_subset = torch.utils.data.Subset(train_dataset, train_indices)
+    val_subset = torch.utils.data.Subset(val_dataset, val_indices)
     
     # Tạo DataLoaders
     train_loader = DataLoader(
-        train_dataset, 
+        train_subset, 
         batch_size=batch_size, 
         shuffle=True, 
         num_workers=num_workers,
@@ -131,7 +186,7 @@ def load_coco_dataset(data_dir="coco_data", train_split=0.7, batch_size=4, num_w
     )
     
     test_loader = DataLoader(
-        val_dataset, 
+        val_subset, 
         batch_size=batch_size, 
         shuffle=False, 
         num_workers=num_workers,
@@ -143,8 +198,8 @@ def load_coco_dataset(data_dir="coco_data", train_split=0.7, batch_size=4, num_w
     num_classes = train_dataset.num_classes
     
     print(f"Dataset loaded successfully!")
-    print(f"Train images: {len(train_dataset.image_ids)}")
-    print(f"Test images: {len(val_dataset.image_ids)}")
+    print(f"Train images: {len(train_indices)}")
+    print(f"Test images: {len(val_indices)}")
     print(f"Number of classes: {num_classes}")
     print(f"Classes: {class_names[:10]}...")  # Hiển thị 10 classes đầu tiên
     
@@ -155,7 +210,7 @@ if __name__ == "__main__":
     try:
         train_loader, test_loader, num_classes, class_names = load_coco_dataset(
             data_dir="coco_data",
-            train_split=0.7,
+            train_set_percent=0.1,
             batch_size=2,
             num_workers=0
         )
