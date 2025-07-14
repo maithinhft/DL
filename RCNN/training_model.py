@@ -123,7 +123,7 @@ class FasterRCNNTrainer:
         """
         Validate model
         """
-        self.model.eval()
+        self.model.train()
         
         total_loss = 0
         loss_components = defaultdict(float)
@@ -143,6 +143,9 @@ class FasterRCNNTrainer:
                 
                 # Forward pass
                 loss_dict = self.model(images, targets)
+                
+                if not isinstance(loss_dict, dict):
+                    raise ValueError(f"Model should return loss dictionary in training mode, got {type(loss_dict)}")
                 
                 # Calculate total loss
                 total_batch_loss = self.criterion(loss_dict)
@@ -320,7 +323,7 @@ def get_training_config():
         'learning_rate': 0.005,
         'momentum': 0.9,
         'weight_decay': 0.0005,
-        'epochs': 50,
+        'epochs': 5,
         'batch_size': 4,
         'lr_step_size': 10,
         'lr_gamma': 0.1,
