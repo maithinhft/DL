@@ -446,9 +446,9 @@ def load_trained_model(model_path, num_classes, device):
     # Load checkpoint
     checkpoint = torch.load(model_path, map_location=device)
     if 'model_state_dict' in checkpoint:
-        model.model.load_state_dict(checkpoint['model_state_dict'])
+        model.load_state_dict(checkpoint['model_state_dict'])
     else:
-        model.model.load_state_dict(checkpoint)
+        model.load_state_dict(checkpoint)
     
     model.to(device)
     model.eval()
